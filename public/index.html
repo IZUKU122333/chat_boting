@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mistral AI ChatBot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      max-height: 900px;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-radius: 15px 15px 0 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      display: flex;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.bot {
+      justify-content: flex-start;
+    }
+
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      word-wrap: break-word;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .user .message-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot .message-content {
+      background: #e9ecef;
+      color: #333;
+      border: 1px solid #dee2e6;
+      border-bottom-left-radius: 4px;
+    }
+
+    .loading {
+      display: flex;
+      gap: 6px;
+      padding: 12px 16px;
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #667eea;
+      animation: bounce 1.4s infinite;
+    }
+
+    .loading-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .loading-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+      }
+      40% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
+    }
+
+    .welcome-message {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+    }
+
+    .welcome-content h2 {
+      font-size: 32px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .welcome-content p {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .example-prompts {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+    }
+
+    .example-prompts button {
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .example-prompts button:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+    }
+
+    .input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 10px;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 25px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      max-height: 100px;
+      transition: all 0.3s ease;
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .send-btn {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .bottom-controls {
+      padding: 15px 20px;
+      background: white;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clear-btn {
+      padding: 8px 15px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    .clear-btn:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+    }
+
+    .status {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .chat-box::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-box::-webkit-scrollbar-track {
+      background: #f8f9fa;
+    }
+
+    .chat-box::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
+
+    .chat-box::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        border-radius: 0;
+        height: 100vh;
+        max-height: 100vh;
+      }
+
+      .message-content {
+        max-width: 85%;
+      }
+
+      .header h1 {
+        font-size: 22px;
+      }
+
+      .welcome-content h2 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🤖 Mistral ChatBot</h1>
+      <p>Powered by Mistral AI API</p>
+    </div>
+
+    <!-- Chat Box -->
+    <div class="chat-box" id="chatBox">
+      <div class="welcome-message">
+        <div class="welcome-content">
+          <h2>Welcome! 👋</h2>
+          <p>Start your conversation with Mistral AI</p>
+          <div class="example-prompts">
+            <button onclick="sendPredefinedMessage('What is artificial intelligence?')">
+              What is artificial intelligence?
+            </button>
+            <button onclick="sendPredefinedMessage('Help me write a Python function')">
+              Help me write a Python function
+            </button>
+            <button onclick="sendPredefinedMessage('Explain quantum computing')">
+              Explain quantum computing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Container -->
+    <div class="input-container">
+      <textarea
+        id="messageInput"
+        class="message-input"
+        placeholder="Type your message... (Shift+Enter for new line)"
+        onkeydown="handleKeyPress(event)"
+      ></textarea>
+      <button id="sendBtn" class="send-btn" onclick="sendMessage()" title="Send message">
+        ➤
+      </button>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+      <button class="clear-btn" onclick="clearChat()">🗑️ Clear Chat</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusDiv = document.getElementById('status');
+
+    let isLoading = false;
+
+    // Function to send message
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+
+      if (!message || isLoading) return;
+
+      // Remove welcome message on first message
+      const welcomeMsg = document.querySelector('.welcome-message');
+      if (welcomeMsg) {
+        welcomeMsg.remove();
+      }
+
+      // Add user message
+      addMessage(message, 'user');
+      messageInput.value = '';
+      sendBtn.disabled = true;
+      isLoading = true;
+      statusDiv.textContent = '⏳ Thinking...';
+
+      // Show loading indicator
+      showLoading();
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        removeLoading();
+
+        if (response.ok && data.success) {
+          addMessage(data.reply, 'bot');
+          statusDiv.textContent = '✅ Response received';
+          setTimeout(() => { statusDiv.textContent = ''; }, 3000);
+        } else {
+          addMessage(`❌ Error: ${data.error}`, 'bot');
+          statusDiv.textContent = `❌ ${data.error}`;
+        }
+      } catch (error) {
+        removeLoading();
+        addMessage(`❌ Error: ${error.message}`, 'bot');
+        statusDiv.textContent = '❌ Network error';
+        console.error('Error:', error);
+      } finally {
+        sendBtn.disabled = false;
+        isLoading = false;
+        messageInput.focus();
+      }
+    }
+
+    // Add message to chat
+    function addMessage(text, sender) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender);
+
+      const contentDiv = document.createElement('div');
+      contentDiv.classList.add('message-content');
+      contentDiv.textContent = text;
+
+      messageDiv.appendChild(contentDiv);
+      chatBox.appendChild(messageDiv);
+
+      // Scroll to bottom
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Show loading indicator
+    function showLoading() {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', 'bot');
+      messageDiv.id = 'loading';
+
+      const contentDiv = document.createElement('div');
+      contentDiv.classList.add('loading');
+      contentDiv.innerHTML = `
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      `;
+
+      messageDiv.appendChild(contentDiv);
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Remove loading indicator
+    function removeLoading() {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.remove();
+      }
+    }
+
+    // Clear chat
+    function clearChat() {
+      if (confirm('Clear all messages?')) {
+        chatBox.innerHTML = `
+          <div class="welcome-message">
+            <div class="welcome-content">
+              <h2>Welcome! 👋</h2>
+              <p>Start your conversation with Mistral AI</p>
+              <div class="example-prompts">
+                <button onclick="sendPredefinedMessage('What is artificial intelligence?')">
+                  What is artificial intelligence?
+                </button>
+                <button onclick="sendPredefinedMessage('Help me write a Python function')">
+                  Help me write a Python function
+                </button>
+                <button onclick="sendPredefinedMessage('Explain quantum computing')">
+                  Explain quantum computing
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        messageInput.value = '';
+        statusDiv.textContent = '';
+
+        fetch('/api/clear', { method: 'POST' });
+      }
+    }
+
+    // Handle Enter key
+    function handleKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // Send predefined message
+    function sendPredefinedMessage(message) {
+      messageInput.value = message;
+      sendMessage();
+    }
+
+    // Focus input on load
+    window.addEventListener('load', () => {
+      messageInput.focus();
+    });
+  </script>
+</body>
+</html>
